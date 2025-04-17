@@ -1,162 +1,121 @@
+# Personal Library Manager using Python and JSON
+
 import json
 
+# Load data from JSON file
+def load_books():
+    try:
+        with open("books.json", "r") as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
-class BookCollection:
-    """A class to manage a collection of books, allowing users to store and organize their reading materials."""
+# Save data to JSON file
+def save_books(books):
+    with open("books.json", "w") as file:
+        json.dump(books, file, indent=4)
 
-    def __init__(self):
-        """Initialize a new book collection with an empty list and set up file storage."""
-        self.book_list = []
-        self.storage_file = "books_data.json"
-        self.read_from_file()
+# Add a new book
+def add_book():
+    title = input("Enter book title: ").strip()
+    author = input("Enter book author: ").strip()
+    genre = input("Enter book genre: ").strip()
+    year = input("Enter publication year: ").strip()
 
-    def read_from_file(self):
-        """Load saved books from a JSON file into memory.
-        If the file doesn't exist or is corrupted, start with an empty collection."""
-        try:
-            with open(self.storage_file, "r") as file:
-                self.book_list = json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.book_list = []
+    books.append({
+        "title": title,
+        "author": author,
+        "genre": genre,
+        "year": year
+    })
 
-    def save_to_file(self):
-        """Store the current book collection to a JSON file for permanent storage."""
-        with open(self.storage_file, "w") as file:
-            json.dump(self.book_list, file, indent=4)
+    save_books(books)
+    print("✅ Book added successfully!\n")
 
-    def create_new_book(self):
-        """Add a new book to the collection by gathering information from the user."""
-        book_title = input("Enter book title: ")
-        book_author = input("Enter author: ")
-        publication_year = input("Enter publication year: ")
-        book_genre = input("Enter genre: ")
-        is_book_read = (
-            input("Have you read this book? (yes/no): ").strip().lower() == "yes"
-        )
-
-        new_book = {
-            "title": book_title,
-            "author": book_author,
-            "year": publication_year,
-            "genre": book_genre,
-            "read": is_book_read,
-        }
-
-        self.book_list.append(new_book)
-        self.save_to_file()
-        print("Book added successfully!\n")
-
-    def delete_book(self):
-        """Remove a book from the collection using its title."""
-        book_title = input("Enter the title of the book to remove: ")
-
-        for book in self.book_list:
-            if book["title"].lower() == book_title.lower():
-                self.book_list.remove(book)
-                self.save_to_file()
-                print("Book removed successfully!\n")
-                return
-        print("Book not found!\n")
-
-    def find_book(self):
-        """Search for books in the collection by title or author name."""
-        search_type = input("Search by:\n1. Title\n2. Author\nEnter your choice: ")
-        search_text = input("Enter search term: ").lower()
-        found_books = [
-            book
-            for book in self.book_list
-            if search_text in book["title"].lower()
-            or search_text in book["author"].lower()
-        ]
-
-        if found_books:
-            print("Matching Books:")
-            for index, book in enumerate(found_books, 1):
-                reading_status = "Read" if book["read"] else "Unread"
-                print(
-                    f"{index}. {book['title']} by {book['author']} ({book['year']}) - {book['genre']} - {reading_status}"
-                )
-        else:
-            print("No matching books found.\n")
-
-    def update_book(self):
-        """Modify the details of an existing book in the collection."""
-        book_title = input("Enter the title of the book you want to edit: ")
-        for book in self.book_list:
-            if book["title"].lower() == book_title.lower():
-                print("Leave blank to keep existing value.")
-                book["title"] = input(f"New title ({book['title']}): ") or book["title"]
-                book["author"] = (
-                    input(f"New author ({book['author']}): ") or book["author"]
-                )
-                book["year"] = input(f"New year ({book['year']}): ") or book["year"]
-                book["genre"] = input(f"New genre ({book['genre']}): ") or book["genre"]
-                book["read"] = (
-                    input("Have you read this book? (yes/no): ").strip().lower()
-                    == "yes"
-                )
-                self.save_to_file()
-                print("Book updated successfully!\n")
-                return
-        print("Book not found!\n")
-
-    def show_all_books(self):
-        """Display all books in the collection with their details."""
-        if not self.book_list:
-            print("Your collection is empty.\n")
-            return
-
-        print("Your Book Collection:")
-        for index, book in enumerate(self.book_list, 1):
-            reading_status = "Read" if book["read"] else "Unread"
-            print(
-                f"{index}. {book['title']} by {book['author']} ({book['year']}) - {book['genre']} - {reading_status}"
-            )
+# View all books
+def view_books():
+    if not books:
+        print("📚 No books found!\n")
+    else:
+        for idx, book in enumerate(books, start=1):
+            print(f"{idx}. {book['title']} by {book['author']} ({book['year']}, {book['genre']})")
         print()
 
-    def show_reading_progress(self):
-        """Calculate and display statistics about your reading progress."""
-        total_books = len(self.book_list)
-        completed_books = sum(1 for book in self.book_list if book["read"])
-        completion_rate = (
-            (completed_books / total_books * 100) if total_books > 0 else 0
-        )
-        print(f"Total books in collection: {total_books}")
-        print(f"Reading progress: {completion_rate:.2f}%\n")
 
-    def start_application(self):
-        """Run the main application loop with a user-friendly menu interface."""
-        while True:
-            print("📚 Welcome to Your Book Collection Manager! 📚")
-            print("1. Add a new book")
-            print("2. Remove a book")
-            print("3. Search for books")
-            print("4. Update book details")
-            print("5. View all books")
-            print("6. View reading progress")
-            print("7. Exit")
-            user_choice = input("Please choose an option (1-7): ")
+def search_books():
+    query = input("Enter title or author to search: ").strip().lower()
+    results = [book for book in books if query in book['title'].lower() or query in book['author'].lower()]
 
-            if user_choice == "1":
-                self.create_new_book()
-            elif user_choice == "2":
-                self.delete_book()
-            elif user_choice == "3":
-                self.find_book()
-            elif user_choice == "4":
-                self.update_book()
-            elif user_choice == "5":
-                self.show_all_books()
-            elif user_choice == "6":
-                self.show_reading_progress()
-            elif user_choice == "7":
-                self.save_to_file()
-                print("Thank you for using Book Collection Manager. Goodbye!")
-                break
-            else:
-                print("Invalid choice. Please try again.\n")
+    if results:
+        for idx, book in enumerate(results, start=1):
+            print(f"{idx}. {book['title']} by {book['author']} ({book['year']}, {book['genre']})")
+    else:
+        print("❌ No matching books found.\n")
 
+# Update a book
+def update_book():
+    view_books()
+    try:
+        choice = int(input("Enter the number of the book to update: ")) - 1
+        if 0 <= choice < len(books):
+            print("Leave blank to keep current value.")
+            books[choice]['title'] = input(f"New title ({books[choice]['title']}): ").strip() or books[choice]['title']
+            books[choice]['author'] = input(f"New author ({books[choice]['author']}): ").strip() or books[choice]['author']
+            books[choice]['genre'] = input(f"New genre ({books[choice]['genre']}): ").strip() or books[choice]['genre']
+            books[choice]['year'] = input(f"New year ({books[choice]['year']}): ").strip() or books[choice]['year']
+
+            save_books(books)
+            print("✅ Book updated successfully!\n")
+        else:
+            print("❌ Invalid choice.\n")
+    except ValueError:
+        print("❌ Please enter a valid number.\n")
+
+# Delete a book
+def delete_book():
+    view_books()
+    try:
+        choice = int(input("Enter the number of the book to delete: ")) - 1
+        if 0 <= choice < len(books):
+            deleted_book = books.pop(choice)
+            save_books(books)
+            print(f"✅ Deleted: {deleted_book['title']} by {deleted_book['author']}\n")
+        else:
+            print("❌ Invalid choice.\n")
+    except ValueError:
+        print("❌ Please enter a valid number.\n")
+
+
+def main():
+    global books
+    books = load_books()
+
+    while True:
+        print("\n📚 Personal Library Manager")
+        print("1. Add a Book")
+        print("2. View All Books")
+        print("3. Search for a Book")
+        print("4. Update a Book")
+        print("5. Delete a Book")
+        print("6. Exit")
+
+        choice = input("\nEnter your choice (1-6): ").strip()
+
+        if choice == '1':
+            add_book()
+        elif choice == '2':
+            view_books()
+        elif choice == '3':
+            search_books()
+        elif choice == '4':
+            update_book()
+        elif choice == '5':
+            delete_book()
+        elif choice == '6':
+            print("👋 Exiting the Library Manager. Goodbye!")
+            break
+        else:
+            print("❌ Invalid choice. Please select a valid option.\n")
 
 if __name__ == "__main__":
-    book_manager = BookCollection()
-    book_manager.start_application()
+    main()
